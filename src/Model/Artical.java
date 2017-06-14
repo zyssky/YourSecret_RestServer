@@ -2,7 +2,10 @@ package Model;
 
 import java.util.Date;
 
+import javax.annotation.Generated;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -11,14 +14,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name="artical")
 @XmlRootElement
 public class Artical {
-	
-	public String getUuid() {
-		return uuid;
-	}
-
-	public void setUuid(String uuid) {
-		this.uuid = uuid;
-	}
 
 	public String getTitle() {
 		return title;
@@ -28,12 +23,12 @@ public class Artical {
 		this.title = title;
 	}
 
-	public String getUserId() {
-		return userId;
+	public String getAuthorId() {
+		return authorId;
 	}
 
-	public void setUserId(String userId) {
-		this.userId = userId;
+	public void setAuthorId(String authorId) {
+		this.authorId = authorId;
 	}
 
 	public String getArticalType() {
@@ -117,11 +112,12 @@ public class Artical {
 	}
 
 	@Id
-	private String uuid;
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long uuid;
 	
 	private String title;
 	
-	private String userId;
+	private String authorId;
 	
 	private String articalType;
 	
@@ -141,6 +137,6 @@ public class Artical {
 	
 	private double longtitude;
 	
-	private int commentNum;
-
+	private int commentNum = 0;
+ 
 }
