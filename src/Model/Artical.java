@@ -56,6 +56,8 @@ public class Artical {
 	}
 
 	public String getImageUri() {
+		if(imageUri!=null)
+			return imageUri.replace("\\", "/");
 		return imageUri;
 	}
 
@@ -64,7 +66,7 @@ public class Artical {
 	}
 
 	public String getArticalHref() {
-		return articalHref;
+		return articalHref.replace("\\", "/");
 	}
 
 	public void setArticalHref(String articalHref) {

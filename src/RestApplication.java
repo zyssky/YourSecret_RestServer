@@ -7,6 +7,7 @@ import javax.ws.rs.core.Application;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import Rest.ArticalService;
+import Rest.UserService;
 
 @ApplicationPath("/Rest/*")
 public class RestApplication extends Application {
@@ -16,9 +17,20 @@ public class RestApplication extends Application {
 
         // Add your resources.
         resources.add(ArticalService.class);
+        resources.add(UserService.class);
 
         // Add additional features such as support for Multipart.
         resources.add(MultiPartFeature.class);
+        
+        try {
+			Class jsonProvider = Class.forName("org.glassfish.jersey.jackson.JacksonFeature");
+			resources.add(jsonProvider);
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        // Class jsonProvider = Class.forName("org.glassfish.jersey.moxy.json.MoxyJsonFeature");
+        // Class jsonProvider = Class.forName("org.glassfish.jersey.jettison.JettisonFeature");
 
         return resources;
     }

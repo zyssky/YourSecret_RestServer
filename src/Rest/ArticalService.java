@@ -6,6 +6,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +37,7 @@ import Api.ArticalApi;
 import Model.Artical;
 import Util.FileManager;
 import Util.UrlContentDecoder;
+import antlr.collections.List;
 
 @Path("/artical")
 public class ArticalService {
@@ -43,24 +45,47 @@ public class ArticalService {
 	ServletContext context;
 	@Context
 	HttpServletRequest request;
+	
+
 		
 	public static String FAIL = "fail";
+	
+    public static String ARTICAL_TYPE_SCENERY = "风景";
+    public static String ARTICAL_TYPE_PERSON = "人物";
+    public static String ARTICAL_TYPE_THING = "事物";
+    public static String ARTICAL_TYPE_INTEREST = "值得";
+    public static String ARTICAL_TYPE_ADS = "广告";
+    
+    public static String ARTICAL_CATOGORY_HOT = "附近热点";
+    public static String ARTICAL_CATOGORY_GOOD= "附近简书";
+    public static String ARTICAL_CATOGORY_PUSH = "附近推荐";
+    public static String ARTICAL_CATOGORY_OUTSIDE = "外面的世界";
 		
 	@GET
-	@Produces(MediaType.TEXT_HTML)
-	public String getArticals(){
-		Artical artical = new Artical();
-//		artical.setUuid(Long.toHexString(new Random().nextLong()));
-		ArticalApi.addArtical(artical);
-		return "hello";
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, ArrayList<Artical>> getArticals(){
+		Map<String, ArrayList<Artical>> map = new HashMap<String, ArrayList<Artical>>();
+		map.put(ARTICAL_CATOGORY_HOT, ArticalApi.getTodayArticals(ARTICAL_TYPE_THING));
+		map.put(ARTICAL_CATOGORY_PUSH, ArticalApi.getTodayArticals(ARTICAL_TYPE_ADS));
+		ArrayList<Artical> articals = ArticalApi.getTodayArticals(ARTICAL_TYPE_INTEREST);
+//		articals.addAll(ArticalApi.getTodayArticals(ARTICAL_TYPE_INTEREST));
+		articals.addAll(ArticalApi.getTodayArticals(ARTICAL_TYPE_PERSON));
+		map.put(ARTICAL_CATOGORY_GOOD, articals);
+		map.put(ARTICAL_CATOGORY_OUTSIDE, ArticalApi.getTodayArticals(ARTICAL_TYPE_SCENERY));
+		
+		return map;
+		
+		
 	}
 	
 	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.TEXT_PLAIN)
 	public String putArtical(FormDataMultiPart multiPart){
+
 		String toRemote = "http://"+request.getLocalAddr()+":"+request.getLocalPort()+request.getContextPath();
 		String toLocal = context.getRealPath("");
+		
 		System.out.println(toLocal);
 		System.out.println(toRemote);
 
@@ -80,8 +105,8 @@ public class ArticalService {
 				
 				if(name.startsWith("image")){
 					InputStream inputStream = item.getEntityAs(InputStream.class);
-					String childPath = FileManager.saveImage(toLocal, inputStream);
-					urlMap.put(name.replace("image:", ""), toRemote+childPath);
+					String filePath = FileManager.saveFile( toLocal, FileManager.ARTICAL_IMAGE_SUBPATH, FileManager.JPG, inputStream);
+					urlMap.put(name.replace("image:", ""), toRemote+filePath);
 					continue;
 				}
 				
@@ -118,8 +143,8 @@ public class ArticalService {
 				for (Entry<String, String> url : urlMap.entrySet()) {
 					rawHtml = rawHtml.replace(url.getKey(), url.getValue());
 				}
-				String childPath = FileManager.saveArtical(toLocal, rawHtml.getBytes());
-				ans = toRemote+childPath;
+				ans = FileManager.saveFile(toLocal,FileManager.ARTICAL_CONTENT_SUBPATH,FileManager.HTML,rawHtml.getBytes());
+				ans = toRemote+ans;
 			}
 			
 			artical.setImageUri(urlMap.get(artical.getImageUri()));

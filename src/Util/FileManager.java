@@ -8,22 +8,21 @@ import java.util.Date;
 import java.util.Random;
 
 public class FileManager {
-	public static String IMAGE = "image";
-	public static String ARTICAL = "artical";
-	public static String IMAGE_SUFFIX = ".jpg";
-	public static String ARTICAL_SUFFIX = ".html";
+	public static String ARTICAL_IMAGE_SUBPATH = "image";
+	public static String ARTICAL_CONTENT_SUBPATH = "artical";
+	public static String USER_ICON_SUBPATH = "userIcon";
+	public static String JPG = ".jpg";
+	public static String HTML = ".html";
+	public static String PNG = ".png";
 	
-	public static String saveImage(String basePah,InputStream inputStream){
-		
-		String path = basePah+File.separator+IMAGE;
-		File file = new File(path,""+new Date().getTime()+IMAGE_SUFFIX);
-		if(!file.getParentFile().exists()){
-			file.getParentFile().mkdirs();
+	public static String saveInputStream(String parentPath,String suffix,InputStream inputStream) {
+		File parentFile = new File(parentPath);
+		if(!parentFile.exists()){
+			parentFile.mkdirs();
 		}
+		File file = getUniuqeFile(parentFile, suffix);
 		
-		while(file.exists()){
-			file = new File(path,""+new Date().getTime()+IMAGE_SUFFIX);
-		}
+		String fileName = file.getName();
 		
 		FileOutputStream outputStream = null;
 		
@@ -37,7 +36,7 @@ public class FileManager {
 		}
 		catch(Exception e){
 			e.printStackTrace();
-			return "";
+			file = null;
 		}finally {
 			try {
 				inputStream.close();
@@ -47,23 +46,22 @@ public class FileManager {
 			} catch (Exception e2) {
 				// TODO: handle exception
 				e2.printStackTrace();
-				return "";
+				fileName = null;
 			}
 			
 		}
-		return "/"+IMAGE+"/"+file.getName();
+		
+		return fileName;
 	}
 	
-	public static String saveArtical(String basePah,byte[] bytes) {
-		String path = basePah+File.separator+ARTICAL;
-		File file = new File(path,""+new Date().getTime()+ARTICAL_SUFFIX);
-		if(!file.getParentFile().exists()){
-			file.getParentFile().mkdirs();
+	public static String saveBytes(String parentPath,String suffix,byte[] bytes) {
+		File parentFile = new File(parentPath);
+		if(!parentFile.exists()){
+			parentFile.mkdirs();
 		}
+		File file = getUniuqeFile(parentFile, suffix);
 		
-		while(file.exists()){
-			file = new File(path,""+new Date().getTime()+ARTICAL_SUFFIX);
-		}
+		String fileName = file.getName();
 		
 		FileOutputStream outputStream = null;
 		
@@ -73,7 +71,7 @@ public class FileManager {
 		}
 		catch(Exception e){
 			e.printStackTrace();
-			return "";
+			fileName = null;
 		}finally {
 			try {
 				outputStream.flush();
@@ -82,12 +80,119 @@ public class FileManager {
 			} catch (Exception e2) {
 				// TODO: handle exception
 				e2.printStackTrace();
-				return "";
+				fileName = null;
 			}
 			
 		}
-		return "/"+ARTICAL+"/"+file.getName();
+		
+		return fileName;
 	}
+	
+	public static File getUniuqeFile(File parentFile,String suffix) {
+		File file = new File(parentFile,new Date().getTime()+suffix);
+		while(file.exists()){
+			file = new File(parentFile,new Date().getTime()+suffix);
+		}
+		return file;
+	}
+	
+	public static String saveFile(String localBasePath,
+			String subPath,String suffix,InputStream inputStream) {
+		String fileName = saveInputStream(localBasePath+File.separator+subPath, suffix, inputStream);
+		if(fileName!=null){
+			return File.separator+subPath+File.separator+fileName;
+		}
+		else{
+			return null;
+		}
+	}
+	
+	public static String saveFile(String localBasePath,
+			String subPath,String suffix,byte[] bytes) {
+		String fileName = saveBytes(localBasePath+File.separator+subPath, suffix, bytes);
+		if(fileName!=null){
+			return File.separator+subPath+File.separator+fileName;
+		}
+		else{
+			return null;
+		}
+	}
+	
+//	public static String saveImage(String basePah,InputStream inputStream){
+//		
+//		String path = basePah+File.separator+IMAGE;
+//		File file = new File(path,""+new Date().getTime()+IMAGE_SUFFIX);
+//		if(!file.getParentFile().exists()){
+//			file.getParentFile().mkdirs();
+//		}
+//		
+//		while(file.exists()){
+//			file = new File(path,""+new Date().getTime()+IMAGE_SUFFIX);
+//		}
+//		
+//		FileOutputStream outputStream = null;
+//		
+//		try{
+//			byte[] bytes = new byte[1024];
+//			int read = 0;
+//			outputStream = new FileOutputStream(file);
+//			while((read = inputStream.read(bytes)) != -1){
+//				outputStream.write(bytes);
+//			}
+//		}
+//		catch(Exception e){
+//			e.printStackTrace();
+//			return "";
+//		}finally {
+//			try {
+//				inputStream.close();
+//				outputStream.flush();
+//				outputStream.close();
+//				
+//			} catch (Exception e2) {
+//				// TODO: handle exception
+//				e2.printStackTrace();
+//				return "";
+//			}
+//			
+//		}
+//		return "/"+IMAGE+"/"+file.getName();
+//	}
+	
+//	public static String saveArtical(String basePah,byte[] bytes) {
+//		String path = basePah+File.separator+ARTICAL_CONTENT_SUBPATH;
+//		File file = new File(path,""+new Date().getTime()+HTML);
+//		if(!file.getParentFile().exists()){
+//			file.getParentFile().mkdirs();
+//		}
+//		
+//		while(file.exists()){
+//			file = new File(path,""+new Date().getTime()+HTML);
+//		}
+//		
+//		FileOutputStream outputStream = null;
+//		
+//		try{
+//			outputStream = new FileOutputStream(file);
+//			outputStream.write(bytes);
+//		}
+//		catch(Exception e){
+//			e.printStackTrace();
+//			return "";
+//		}finally {
+//			try {
+//				outputStream.flush();
+//				outputStream.close();
+//				
+//			} catch (Exception e2) {
+//				// TODO: handle exception
+//				e2.printStackTrace();
+//				return "";
+//			}
+//			
+//		}
+//		return "/"+ARTICAL_CONTENT_SUBPATH+"/"+file.getName();
+//	}
 	
 	public static boolean deleteFile(String path){
         File file = new File(path);

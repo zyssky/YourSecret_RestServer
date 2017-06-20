@@ -31,7 +31,7 @@
 	    <property name="jdbc.batch_size">23 </property>  
 		
 		<mapping class="Model.Artical"/>
-		
+		<mapping class="Model.User"/>
 		
 		
 	</session-factory>
