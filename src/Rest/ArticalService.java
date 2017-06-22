@@ -1,6 +1,7 @@
 package Rest;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -34,7 +35,9 @@ import org.json.JSONObject;
 import org.junit.internal.runners.statements.Fail;
 
 import Api.ArticalApi;
+import Api.ImageApi;
 import Model.Artical;
+import Model.ArticalResponse;
 import Util.FileManager;
 import Util.UrlContentDecoder;
 import antlr.collections.List;
@@ -74,28 +77,54 @@ public class ArticalService {
 		map.put(ARTICAL_CATOGORY_OUTSIDE, ArticalApi.getTodayArticals(ARTICAL_TYPE_SCENERY));
 		
 		return map;
-		
-		
+	}
+	
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	public ArrayList<Artical> getUserArticals(@FormParam("token") String token){
+		return ArticalApi.getUserArticals(token);
+	}
+	
+	@POST
+	@Path("delete")
+	@Produces(MediaType.TEXT_PLAIN)
+	public String deleteArtical(@FormParam("token") String token,@FormParam("articalHref") String articalHref){
+		boolean status = ArticalApi.deleteArtical(token,articalHref);
+		if(status){
+			String toRemote = "http://"+request.getLocalAddr()+":"+request.getLocalPort()+request.getContextPath();
+			String toLocal = context.getRealPath("");
+			
+			String path = articalHref.replace(toRemote, toLocal);
+			path = path.replace("/", File.separator);
+			FileManager.deleteFile(path);
+			
+			ArrayList<String> list = ImageApi.removeImages(articalHref);
+			for (String subpath : list) {
+				FileManager.deleteFile(toLocal+subpath);
+			}
+			return "success";
+		}
+		return "fail";
 	}
 	
 	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	@Produces(MediaType.TEXT_PLAIN)
-	public String putArtical(FormDataMultiPart multiPart){
+	@Produces(MediaType.APPLICATION_JSON)
+	public ArticalResponse putArtical(FormDataMultiPart multiPart){
 
 		String toRemote = "http://"+request.getLocalAddr()+":"+request.getLocalPort()+request.getContextPath();
 		String toLocal = context.getRealPath("");
-		
-		System.out.println(toLocal);
-		System.out.println(toRemote);
 
-		String ans = null;
+		String articalHref = null;
+		
+		String clientUuid = null;
+		
+		Artical artical = new Artical();
+		
+		ArrayList<String> imageSubPaths = new ArrayList<String>();
 		
 		if(multiPart!=null){
 			String rawHtml = null;
-			
-			Artical artical = new Artical();
-			
 			
 			Map<String, String> urlMap = new HashMap<String, String>();
 			
@@ -103,10 +132,12 @@ public class ArticalService {
 				String name = ((FormDataBodyPart) item).getName();
 				System.out.println(name);
 				
+				//parse the multipart form
 				if(name.startsWith("image")){
 					InputStream inputStream = item.getEntityAs(InputStream.class);
 					String filePath = FileManager.saveFile( toLocal, FileManager.ARTICAL_IMAGE_SUBPATH, FileManager.JPG, inputStream);
 					urlMap.put(name.replace("image:", ""), toRemote+filePath);
+					imageSubPaths.add(filePath);
 					continue;
 				}
 				
@@ -118,10 +149,7 @@ public class ArticalService {
 				if(name.equals("artical")){
 					String entity = item.getEntityAs(String.class);
 					Map<String, String> map = UrlContentDecoder.getEntityMap(entity);
-//					for (Entry<String,String> pair : map.entrySet()) {
-//						System.out.println(pair.getKey()+":"+pair.getValue());
-//						
-//					}
+
 					artical.setAuthorId(map.get("authorId"));
 					artical.setIntroduction(map.get("introduction"));
 					artical.setLatitude(Double.parseDouble(map.get("latitude")));
@@ -132,30 +160,51 @@ public class ArticalService {
 					artical.setSaveType(Integer.parseInt(map.get("saveType")));
 					artical.setImageUri(map.get("imageUri"));
 					artical.setDate(new Date());
+					
+					clientUuid = map.get("uuid");
 					continue;
 				}
 
 			}
 			
-			
-			
+			//replace the <img.../> tag in the html
 			if(rawHtml!=null){
 				for (Entry<String, String> url : urlMap.entrySet()) {
 					rawHtml = rawHtml.replace(url.getKey(), url.getValue());
 				}
-				ans = FileManager.saveFile(toLocal,FileManager.ARTICAL_CONTENT_SUBPATH,FileManager.HTML,rawHtml.getBytes());
-				ans = toRemote+ans;
+				articalHref = FileManager.saveFile(toLocal,FileManager.ARTICAL_CONTENT_SUBPATH,FileManager.HTML,rawHtml.getBytes());
+				articalHref = toRemote+articalHref.replace(File.separator, "/");
 			}
 			
+			//update the artical's imageUri and set the articalHref
 			artical.setImageUri(urlMap.get(artical.getImageUri()));
-			artical.setArticalHref(ans);
+			artical.setArticalHref(articalHref);
 			
+			//write to database
 			ArticalApi.addArtical(artical);
+			ImageApi.addImages(articalHref, imageSubPaths);
 			
 		}
-		System.out.println(ans);
+		System.out.println(articalHref);
+		
+		ArticalResponse response = new ArticalResponse();
+		
+		if(articalHref != null){
+			
+			response.setArticalClientUuid(clientUuid);
+			response.setArticalHref(articalHref);
+			response.setCode(200);
+			response.setMessage("success");
+			response.setImageUri(artical.getImageUri());
+			
+		}
+		else{
 
-		return ans;
+			response.setCode(999);
+			response.setMessage("fail");
+		}
+		
+		return response;
 	}
 
 }

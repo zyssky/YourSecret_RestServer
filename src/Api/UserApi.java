@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.hibernate.Session;
 
 import Model.User;
+import antlr.collections.List;
 
 public class UserApi {
 	
@@ -59,20 +60,24 @@ public class UserApi {
 		String phoneNum = null;
 		User user = null;
 		Session session = HibernateUtil.getCurrentSession();
-		session.getTransaction().begin();
+//		session.getTransaction().begin();
 		try {
 			String hql  = "from User where token = ?";
-			user = session.createQuery(hql,User.class).setParameter(0, token).list().get(0);
+			java.util.List<User> usersList = session.createQuery(hql,User.class).setParameter(0, token).list();
+			if(usersList.isEmpty()){
+				return phoneNum;
+			}
+			user = usersList.get(0);
 			if(user!=null){
 				phoneNum = user.getPhoneNum();
 				user.setTokenAvailDate(new Date(new Date().getTime()+(long)60*60*24*30*1000));
 				session.update(user);
 			}
-			session.getTransaction().commit();
+//			session.getTransaction().commit();
 		} catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();
-			session.getTransaction().rollback();
+//			session.getTransaction().rollback();
 		}
 		return phoneNum;
 	}

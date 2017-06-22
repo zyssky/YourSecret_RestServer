@@ -18,6 +18,7 @@ import org.json.JSONObject;
 
 import Api.UserApi;
 import Model.User;
+import Model.UserResponse;
 import Util.FileManager;
 
 @Path("/user")
@@ -30,27 +31,33 @@ public class UserService {
 	@Path("login")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public String login(@FormParam("identifier") String identifier){
+	public UserResponse login(@FormParam("identifier") String identifier){
 		User user = UserApi.createOrUpdateToken(identifier);
-		String ansString = null;
+
+		UserResponse response = new UserResponse();
+		response.code = 999;
+		response.message = "fail";
+		
 		if(user!=null){
-			ansString = getAnswerString(200, "success", user.toJson());
+			response.code = 200;
+			response.message = "success";
 		}
-		else{
-			ansString = getAnswerString(999, "fail", null);
-		}
-		return ansString;
+		return response;
 	}
 	
 	@Path("register")
 	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
-	public String register(@FormDataParam("phoneNum") String phoneNum,@FormDataParam("identifier") String identifier,
+	public UserResponse register(@FormDataParam("phoneNum") String phoneNum,@FormDataParam("identifier") String identifier,
 			@FormDataParam("nickName") String nickName,@FormDataParam("image") InputStream imageData){
 		
 		String toRemote = "http://"+request.getLocalAddr()+":"+request.getLocalPort()+request.getContextPath();
 		String toLocal = context.getRealPath("");
+		
+		UserResponse response = new UserResponse();
+		response.code = 999;
+		response.message = "fail";
 		
 		User user = new User();
 		user.setPhoneNum(phoneNum);
@@ -59,22 +66,25 @@ public class UserService {
 		String filePath = FileManager.saveFile(toLocal, FileManager.USER_ICON_SUBPATH, FileManager.JPG, imageData);
 		user.setUserIconPath(filePath);
 		if(UserApi.addUser(user)){
-			return getAnswerString(200, "success", null);
+			response.code = 200;
+			response.message = "success";
 		}
-		else{
-			return getAnswerString(999, "fail", null);
-		}
+		return response;
 	}
 	
 	@Path("modify")
 	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
-	public String modify(@FormDataParam("token") String token,
+	public UserResponse modify(@FormDataParam("token") String token,
 			@FormDataParam("nickName") String nickName,@FormDataParam("image") InputStream imageData){
 		
 		String toRemote = "http://"+request.getLocalAddr()+":"+request.getLocalPort()+request.getContextPath();
 		String toLocal = context.getRealPath("");
+		
+		UserResponse response = new UserResponse();
+		response.code = 999;
+		response.message = "fail";
 		
 		if(token!=null){
 			User user = UserApi.getUser(token);
@@ -86,16 +96,13 @@ public class UserService {
 				user.setUserIconPath(filePath);
 			}
 			if(UserApi.updateUser(user)){
-				return getAnswerString(200, "success", user.toJson());
-			}
-			else{
-				return getAnswerString(999, "fail", null);
+				response.code = 200;
+				response.message = "success";
+				response.nickName = user.getNickName();
+				response.userIconPath = user.getUserIconPath();
 			}
 		}
-
-		else{
-			return getAnswerString(999, "fail", null);
-		}
+		return response;
 	}
 	
 	
