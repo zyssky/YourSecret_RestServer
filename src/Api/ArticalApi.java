@@ -48,14 +48,16 @@ public class ArticalApi {
 
 	public static ArrayList<Artical> getUserArticals(String token) {
 		// TODO Auto-generated method stub
-		Session session = HibernateUtil.getCurrentSession();
-		session.getTransaction().begin();
 		ArrayList<Artical> list = new ArrayList<Artical>(); 
 		
 		String phoneNum = UserApi.getUserPhoneNum(token);
 		if(phoneNum ==null || phoneNum.isEmpty()){
 			return list;
 		}
+		
+		Session session = HibernateUtil.getCurrentSession();
+		session.getTransaction().begin();
+
 		try {
 			String hql = "from Artical where authorId = ? order by date desc";
 			list.addAll(session.createQuery(hql,Artical.class).setParameter(0, phoneNum).list());
@@ -70,13 +72,16 @@ public class ArticalApi {
 
 	public static boolean deleteArtical(String token, String articalHref) {
 		// TODO Auto-generated method stub
-		Session session = HibernateUtil.getCurrentSession();
-		session.getTransaction().begin();
 		
 		String phoneNum = UserApi.getUserPhoneNum(token);
 		if(phoneNum ==null || phoneNum.isEmpty()){
 			return false;
 		}
+		
+		
+		Session session = HibernateUtil.getCurrentSession();
+		session.getTransaction().begin();
+
 		try {
 			String hql = "delete from Artical where articalHref = :href and authorId = :phonenum";
 			int ans = session.createQuery(hql).setString("href", articalHref).setString("phonenum", phoneNum).executeUpdate();

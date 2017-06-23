@@ -34,6 +34,7 @@ public class UserService {
 	public UserResponse login(@FormParam("identifier") String identifier){
 		User user = UserApi.createOrUpdateToken(identifier);
 
+		System.out.println(identifier);
 		UserResponse response = new UserResponse();
 		response.code = 999;
 		response.message = "fail";
@@ -50,10 +51,14 @@ public class UserService {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	public UserResponse register(@FormDataParam("phoneNum") String phoneNum,@FormDataParam("identifier") String identifier,
-			@FormDataParam("nickName") String nickName,@FormDataParam("image") InputStream imageData){
+			@FormDataParam("nickName") String nickName){
 		
 		String toRemote = "http://"+request.getLocalAddr()+":"+request.getLocalPort()+request.getContextPath();
 		String toLocal = context.getRealPath("");
+		
+		System.out.println(identifier);
+		
+		String defaulticonPath = toRemote+"/userIcon/default.jpg";
 		
 		UserResponse response = new UserResponse();
 		response.code = 999;
@@ -63,12 +68,14 @@ public class UserService {
 		user.setPhoneNum(phoneNum);
 		user.setNickName(nickName);
 		user.setIdentifier(identifier);
-		String filePath = FileManager.saveFile(toLocal, FileManager.USER_ICON_SUBPATH, FileManager.JPG, imageData);
-		user.setUserIconPath(filePath);
+//		String filePath = FileManager.saveFile(toLocal, FileManager.USER_ICON_SUBPATH, FileManager.JPG, imageData);
+		user.setUserIconPath(defaulticonPath);
 		if(UserApi.addUser(user)){
 			response.code = 200;
 			response.message = "success";
+			response.userIconPath = defaulticonPath;
 		}
+		System.out.println(defaulticonPath);
 		return response;
 	}
 	
@@ -77,7 +84,7 @@ public class UserService {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	public UserResponse modify(@FormDataParam("token") String token,
-			@FormDataParam("nickName") String nickName,@FormDataParam("image") InputStream imageData){
+			@FormDataParam("nickName") String nickName,@FormDataParam("identifier") String identifier,@FormDataParam("image") InputStream imageData){
 		
 		String toRemote = "http://"+request.getLocalAddr()+":"+request.getLocalPort()+request.getContextPath();
 		String toLocal = context.getRealPath("");
@@ -95,11 +102,16 @@ public class UserService {
 				String filePath = FileManager.saveFile(toLocal, FileManager.USER_ICON_SUBPATH, FileManager.JPG, imageData);
 				user.setUserIconPath(filePath);
 			}
+			if(identifier!=null){
+				user.setIdentifier(identifier);
+			}
 			if(UserApi.updateUser(user)){
 				response.code = 200;
 				response.message = "success";
+				
 				response.nickName = user.getNickName();
 				response.userIconPath = user.getUserIconPath();
+
 			}
 		}
 		return response;

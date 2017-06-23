@@ -136,7 +136,7 @@ public class ArticalService {
 				if(name.startsWith("image")){
 					InputStream inputStream = item.getEntityAs(InputStream.class);
 					String filePath = FileManager.saveFile( toLocal, FileManager.ARTICAL_IMAGE_SUBPATH, FileManager.JPG, inputStream);
-					urlMap.put(name.replace("image:", ""), toRemote+filePath);
+					urlMap.put(name.replace("image:", ""), toRemote+filePath.replace(File.separator, "/"));
 					imageSubPaths.add(filePath);
 					continue;
 				}

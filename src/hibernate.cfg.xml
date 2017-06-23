@@ -33,6 +33,7 @@
 		<mapping class="Model.Artical"/>
 		<mapping class="Model.User"/>
 		<mapping class="Model.Image"/>
+		<mapping class="Model.Comment"/>
 		
 		
 	</session-factory>
