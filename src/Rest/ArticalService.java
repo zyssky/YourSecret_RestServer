@@ -21,6 +21,7 @@ import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -53,31 +54,91 @@ public class ArticalService {
 		
 	public static String FAIL = "fail";
 	
-    public static String ARTICAL_TYPE_SCENERY = "风景";
-    public static String ARTICAL_TYPE_PERSON = "人物";
-    public static String ARTICAL_TYPE_THING = "事物";
-    public static String ARTICAL_TYPE_INTEREST = "值得";
-    public static String ARTICAL_TYPE_ADS = "广告";
+    public static String ARTICLE_TYPE_HOT = "热点" ;
+    public static String ARTICLE_TYPE_NOTICE = "推荐";
+    public static String ARTICLE_TYPE_ARTICLE = "简书" ;
     
     public static String ARTICAL_CATOGORY_HOT = "附近热点";
     public static String ARTICAL_CATOGORY_GOOD= "附近简书";
     public static String ARTICAL_CATOGORY_PUSH = "附近推荐";
     public static String ARTICAL_CATOGORY_OUTSIDE = "外面的世界";
+    public static double distance = 0.01;
+    
+	public static HashMap<String, String> map;
+    
 		
-	@GET
+	@POST
+	@Path("near")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, ArrayList<Artical>> getArticals(){
+	public Map<String, ArrayList<Artical>> getArticals(@FormParam("latitude") String latitude,@FormParam("longitude") String longitude){
+		double x = Double.parseDouble(latitude);
+		double y = Double.parseDouble(longitude);
+		double x1 = x-distance;
+		double y1 = y+distance;
+		double x2 = x+distance;
+		double y2 = y-distance;
+		
+		int no = 0;
+		
 		Map<String, ArrayList<Artical>> map = new HashMap<String, ArrayList<Artical>>();
-		map.put(ARTICAL_CATOGORY_HOT, ArticalApi.getTodayArticals(ARTICAL_TYPE_THING));
-		map.put(ARTICAL_CATOGORY_PUSH, ArticalApi.getTodayArticals(ARTICAL_TYPE_ADS));
-		ArrayList<Artical> articals = ArticalApi.getTodayArticals(ARTICAL_TYPE_INTEREST);
-//		articals.addAll(ArticalApi.getTodayArticals(ARTICAL_TYPE_INTEREST));
-		articals.addAll(ArticalApi.getTodayArticals(ARTICAL_TYPE_PERSON));
-		map.put(ARTICAL_CATOGORY_GOOD, articals);
-		map.put(ARTICAL_CATOGORY_OUTSIDE, ArticalApi.getTodayArticals(ARTICAL_TYPE_SCENERY));
+		map.put(ARTICAL_CATOGORY_HOT, ArticalApi.getNearArticals(no,ARTICLE_TYPE_HOT,x1,y1,x2,y2));
+		map.put(ARTICAL_CATOGORY_PUSH, ArticalApi.getNearArticals(no,ARTICLE_TYPE_NOTICE,x1,y1,x2,y2));
+		map.put(ARTICAL_CATOGORY_GOOD, ArticalApi.getNearArticals(no,ARTICLE_TYPE_ARTICLE,x1,y1,x2,y2));
+		map.put(ARTICAL_CATOGORY_OUTSIDE, ArticalApi.getOutSideArticals(no,ARTICLE_TYPE_ARTICLE,x1,y1,x2,y2));
 		
 		return map;
 	}
+	
+	@POST
+	@Path("near/{type}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public ArrayList<Artical> getTypeArticals(@PathParam("type") String articalType,
+			@FormParam("latitude") String latitude,@FormParam("longitude") String longitude,@FormParam("pageNO") String pageNo){
+		double x = Double.parseDouble(latitude);
+		double y = Double.parseDouble(longitude);
+		double x1 = x-distance;
+		double y1 = y+distance;
+		double x2 = x+distance;
+		double y2 = y-distance;
+		
+		int no = Integer.parseInt(pageNo);
+		
+//		Map<String, ArrayList<Artical>> map = new HashMap<String, ArrayList<Artical>>();
+		ArrayList<Artical> list = null;
+		if(!articalType.equals(ARTICAL_CATOGORY_OUTSIDE))
+			list = ArticalApi.getNearArticals(no,map.get(articalType),x1,y1,x2,y2);
+		else {
+			list = ArticalApi.getOutSideArticals(no, map.get(articalType), x1, y1, x2, y2);
+		}
+//		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM月dd日");
+//		for (Artical artical : list) {
+//			String date = dateFormat.format(artical.getDate());
+//			if(!map.containsKey(date)){
+//				map.put(date, new ArrayList<Artical>());
+//			}
+//			map.get(date).add(artical);
+//		}
+		
+		return list;
+	}
+	
+	@POST
+	@Path("map")
+	@Produces(MediaType.APPLICATION_JSON)
+	public ArrayList<Artical> getNearestArticals(@FormParam("latitude") String latitude,
+			@FormParam("longitude") String longitude,@FormParam("pageNO") String pageNo){
+		double x = Double.parseDouble(latitude);
+		double y = Double.parseDouble(longitude);
+		double x1 = x-distance;
+		double y1 = y+distance;
+		double x2 = x+distance;
+		double y2 = y-distance;
+		
+		int no = Integer.parseInt(pageNo);
+		
+		return ArticalApi.getNearArticals(no, x1, y1, x2, y2);
+	}
+	
 	
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)

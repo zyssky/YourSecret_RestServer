@@ -7,11 +7,14 @@ import java.util.Date;
 import javax.enterprise.inject.New;
 
 import org.hibernate.Session;
+import org.hibernate.query.Query;
 
 import Model.Artical;
 import antlr.collections.List;
 
 public class ArticalApi {
+	
+	public static int pageSize = 5;
 	
 	public static void addArtical(Artical artical) {
 		Session session = HibernateUtil.getCurrentSession();
@@ -26,17 +29,24 @@ public class ArticalApi {
 		}
 	}
 	
-	public static ArrayList<Artical> getTodayArticals(String articalType){
+	public static ArrayList<Artical> getNearArticals(int no,String articalType,double x1,double y1,double x2,double y2){
 		Session session = HibernateUtil.getCurrentSession();
 		session.getTransaction().begin();
 		ArrayList<Artical> list = new ArrayList<Artical>(); 
 		try {
-			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-			Date yesterday = new Date(new Date().getTime()-(long)24*60*60*1000);
-			String limit = dateFormat.format(yesterday);
-			limit = "'"+limit+"'";
-			String hql = "from Artical where date >= ? order by date desc";
-			list.addAll(session.createQuery(hql,Artical.class).setParameter(0, yesterday).list());
+//			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+//			Date yesterday = new Date(new Date().getTime()-(long)24*60*60*1000);
+			String hql = "from Artical where articalType =:ariticalType and saveType = 1 "
+					+ "and latitude >= :x1 and latitude <= :x2 and longtitude <= :y1 and longtitude >= :y2 "
+					+ "order by date desc";
+			Query query = session.createQuery(hql)
+					.setString("ariticalType", articalType)
+					.setDouble("x1", x1).setDouble("x2", x2)
+					.setDouble("y1", y1).setDouble("y2", y2);
+			query.setFirstResult(no*pageSize);
+			query.setMaxResults(pageSize);
+			java.util.List<Artical> temp = query.getResultList();
+			list.addAll(temp);
 			session.getTransaction().commit();
 		} catch (Exception e) {
 			// TODO: handle exception
@@ -86,11 +96,15 @@ public class ArticalApi {
 			String hql = "delete from Artical where articalHref = :href and authorId = :phonenum";
 			int ans = session.createQuery(hql).setString("href", articalHref).setString("phonenum", phoneNum).executeUpdate();
 			session.getTransaction().commit();
-			if(ans>0)
-				return true;
-			else{
-				return false;
-			}
+//			if(ans>0){
+//				CommentApi.deleteComments(articalHref);
+//				return true;
+//			}
+//				
+//			else{
+//				return false;
+//			}
+			return true;
 		} catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();
@@ -98,7 +112,58 @@ public class ArticalApi {
 		}
 		return false;
 	}
-	
-	
+
+	public static ArrayList<Artical> getOutSideArticals(int no , String articalType,double x1,double y1,double x2,double y2) {
+		// TODO Auto-generated method stub
+		Session session = HibernateUtil.getCurrentSession();
+		session.getTransaction().begin();
+		ArrayList<Artical> list = new ArrayList<Artical>();
+		try {
+			String hql = "from Artical where articalType = :ariticalType and saveType = 1 "
+					+ "and latitude not between :x1 and :x2 and longtitude not between :y2 and :y1 "
+					+ "order by commentNum desc";
+			Query query = session.createQuery(hql)
+					.setString("ariticalType", articalType)
+					.setDouble("x1", x1).setDouble("x2", x2)
+					.setDouble("y1", y1).setDouble("y2", y2);
+			query.setFirstResult(no*pageSize);
+			query.setMaxResults(pageSize);
+			java.util.List<Artical> temp = query.getResultList();
+			list.addAll(temp);
+			
+			session.getTransaction().commit();
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			session.getTransaction().rollback();
+		}
+		return list;
+	}
+
+	public static ArrayList<Artical> getNearArticals(int no, double x1, double y1, double x2, double y2) {
+		Session session = HibernateUtil.getCurrentSession();
+		session.getTransaction().begin();
+		ArrayList<Artical> list = new ArrayList<Artical>(); 
+		try {
+//			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+//			Date yesterday = new Date(new Date().getTime()-(long)24*60*60*1000);
+			String hql = "from Artical where and saveType = 1 "
+					+ "and latitude >= :x1 and latitude <= :x2 and longtitude <= :y1 and longtitude >= :y2 "
+					+ "order by date desc";
+			Query query = session.createQuery(hql)
+					.setDouble("x1", x1).setDouble("x2", x2)
+					.setDouble("y1", y1).setDouble("y2", y2);
+			query.setFirstResult(no*pageSize);
+			query.setMaxResults(pageSize);
+			java.util.List<Artical> temp = query.getResultList();
+			list.addAll(temp);
+			session.getTransaction().commit();
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			session.getTransaction().rollback();
+		}
+		return list;
+	}
 
 }

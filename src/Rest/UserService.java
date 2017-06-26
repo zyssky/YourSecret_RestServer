@@ -1,5 +1,6 @@
 package Rest;
 
+import java.io.File;
 import java.io.InputStream;
 
 import javax.servlet.ServletContext;
@@ -38,10 +39,14 @@ public class UserService {
 		UserResponse response = new UserResponse();
 		response.code = 999;
 		response.message = "fail";
-		
+		String toRemote = "http://"+request.getLocalAddr()+":"+request.getLocalPort()+request.getContextPath();
 		if(user!=null){
 			response.code = 200;
 			response.message = "success";
+			response.nickName = user.getNickName();
+			response.userIconPath = toRemote+user.getUserIconPath().replace(File.separator, "/");
+			response.token = user.getToken();
+			
 		}
 		return response;
 	}
@@ -58,7 +63,7 @@ public class UserService {
 		
 		System.out.println(identifier);
 		
-		String defaulticonPath = toRemote+"/userIcon/default.jpg";
+		String defaulticonPath = "/userIcon/default.jpg";
 		
 		UserResponse response = new UserResponse();
 		response.code = 999;
@@ -79,12 +84,27 @@ public class UserService {
 		return response;
 	}
 	
+	@Path("security")
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	public UserResponse modify(@FormParam("phoneNum")String phoneNum,@FormParam("theold") String theOld,@FormParam("thenew")String theNew){
+		UserResponse response = new UserResponse();
+		response.code = 999;
+		response.message = "fail";
+		
+		if(UserApi.modifyPassword(phoneNum,theOld,theNew)){
+			response.code = 200;
+			response.message = "success";
+		}
+		return response;
+	}
+	
 	@Path("modify")
 	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	public UserResponse modify(@FormDataParam("token") String token,
-			@FormDataParam("nickName") String nickName,@FormDataParam("identifier") String identifier,@FormDataParam("image") InputStream imageData){
+			@FormDataParam("nickName") String nickName,@FormDataParam("image") InputStream imageData){
 		
 		String toRemote = "http://"+request.getLocalAddr()+":"+request.getLocalPort()+request.getContextPath();
 		String toLocal = context.getRealPath("");
@@ -102,15 +122,12 @@ public class UserService {
 				String filePath = FileManager.saveFile(toLocal, FileManager.USER_ICON_SUBPATH, FileManager.JPG, imageData);
 				user.setUserIconPath(filePath);
 			}
-			if(identifier!=null){
-				user.setIdentifier(identifier);
-			}
 			if(UserApi.updateUser(user)){
 				response.code = 200;
 				response.message = "success";
 				
 				response.nickName = user.getNickName();
-				response.userIconPath = user.getUserIconPath();
+				response.userIconPath =toRemote + user.getUserIconPath().replace(File.separator, "/");
 
 			}
 		}

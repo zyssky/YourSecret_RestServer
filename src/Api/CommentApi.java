@@ -70,6 +70,7 @@ public class CommentApi {
 				comment.setImageUri((String) obj[5]);
 				comment.setIntroduction((String) obj[6]);
 				comment.setArticalHref((String) obj[7]);
+				comment.setAuthorId(phoneNum);
 				list.add(comment);
 			}
 			
@@ -82,6 +83,21 @@ public class CommentApi {
 			session.getTransaction().rollback();
 		}
 		return list;
+	}
+
+	public static void deleteComments(String articalHref) {
+		// TODO Auto-generated method stub
+		Session session = HibernateUtil.getCurrentSession();
+		session.getTransaction().begin();
+		try {
+			String hql = "delete from Comment where articalHref = ?";
+			session.createQuery(hql).setParameter(0, articalHref).executeUpdate();
+			session.getTransaction().commit();
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			session.getTransaction().rollback();
+		}
 	}
 
 }
