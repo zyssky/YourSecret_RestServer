@@ -1,6 +1,7 @@
 package Rest;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 
 import javax.servlet.ServletContext;
@@ -21,6 +22,9 @@ import Api.UserApi;
 import Model.User;
 import Model.UserResponse;
 import Util.FileManager;
+import net.coobird.thumbnailator.Thumbnails;
+import net.coobird.thumbnailator.makers.ThumbnailMaker;
+import net.coobird.thumbnailator.util.ThumbnailatorUtils;
 
 @Path("/user")
 public class UserService {
@@ -44,7 +48,7 @@ public class UserService {
 			response.code = 200;
 			response.message = "success";
 			response.nickName = user.getNickName();
-			response.userIconPath = toRemote+user.getUserIconPath().replace(File.separator, "/");
+			response.userIconPath = user.getUserIconPath();
 			response.token = user.getToken();
 			
 		}
@@ -59,11 +63,11 @@ public class UserService {
 			@FormDataParam("nickName") String nickName){
 		
 		String toRemote = "http://"+request.getLocalAddr()+":"+request.getLocalPort()+request.getContextPath();
-		String toLocal = context.getRealPath("");
+//		String toLocal = context.getRealPath("");
 		
 		System.out.println(identifier);
 		
-		String defaulticonPath = "/userIcon/default.jpg";
+		String defaulticonPath = toRemote+"/userIcon/default.jpg";
 		
 		UserResponse response = new UserResponse();
 		response.code = 999;
@@ -118,16 +122,27 @@ public class UserService {
 			if(nickName!=null)
 				user.setNickName(nickName);
 			if(imageData!=null){
-				FileManager.deleteFile(toLocal+user.getUserIconPath());
-				String filePath = FileManager.saveFile(toLocal, FileManager.USER_ICON_SUBPATH, FileManager.JPG, imageData);
-				user.setUserIconPath(filePath);
+//				FileManager.deleteFile(toLocal+user.getUserIconPath());
+				
+				File file;
+				try {
+					file = FileManager.createUniuqeFile(toLocal+File.separator+FileManager.USER_ICON_SUBPATH, FileManager.JPG);
+					Thumbnails.of(imageData).size(200, 200).toFile(file);
+					user.setUserIconPath(toRemote+"/"+FileManager.USER_ICON_SUBPATH+"/"+file.getName());
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+//				String filePath = FileManager.saveFile(toLocal, FileManager.USER_ICON_SUBPATH, FileManager.JPG, imageData);
+//				FileManager.createFile(targetLocalPath);
+				
 			}
 			if(UserApi.updateUser(user)){
 				response.code = 200;
 				response.message = "success";
 				
 				response.nickName = user.getNickName();
-				response.userIconPath =toRemote + user.getUserIconPath().replace(File.separator, "/");
+				response.userIconPath =user.getUserIconPath();
 
 			}
 		}

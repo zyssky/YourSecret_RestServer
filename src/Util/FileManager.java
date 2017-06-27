@@ -118,88 +118,35 @@ public class FileManager {
 		}
 	}
 	
-//	public static String saveImage(String basePah,InputStream inputStream){
-//		
-//		String path = basePah+File.separator+IMAGE;
-//		File file = new File(path,""+new Date().getTime()+IMAGE_SUFFIX);
-//		if(!file.getParentFile().exists()){
-//			file.getParentFile().mkdirs();
-//		}
-//		
-//		while(file.exists()){
-//			file = new File(path,""+new Date().getTime()+IMAGE_SUFFIX);
-//		}
-//		
-//		FileOutputStream outputStream = null;
-//		
-//		try{
-//			byte[] bytes = new byte[1024];
-//			int read = 0;
-//			outputStream = new FileOutputStream(file);
-//			while((read = inputStream.read(bytes)) != -1){
-//				outputStream.write(bytes);
-//			}
-//		}
-//		catch(Exception e){
-//			e.printStackTrace();
-//			return "";
-//		}finally {
-//			try {
-//				inputStream.close();
-//				outputStream.flush();
-//				outputStream.close();
-//				
-//			} catch (Exception e2) {
-//				// TODO: handle exception
-//				e2.printStackTrace();
-//				return "";
-//			}
-//			
-//		}
-//		return "/"+IMAGE+"/"+file.getName();
-//	}
-	
-//	public static String saveArtical(String basePah,byte[] bytes) {
-//		String path = basePah+File.separator+ARTICAL_CONTENT_SUBPATH;
-//		File file = new File(path,""+new Date().getTime()+HTML);
-//		if(!file.getParentFile().exists()){
-//			file.getParentFile().mkdirs();
-//		}
-//		
-//		while(file.exists()){
-//			file = new File(path,""+new Date().getTime()+HTML);
-//		}
-//		
-//		FileOutputStream outputStream = null;
-//		
-//		try{
-//			outputStream = new FileOutputStream(file);
-//			outputStream.write(bytes);
-//		}
-//		catch(Exception e){
-//			e.printStackTrace();
-//			return "";
-//		}finally {
-//			try {
-//				outputStream.flush();
-//				outputStream.close();
-//				
-//			} catch (Exception e2) {
-//				// TODO: handle exception
-//				e2.printStackTrace();
-//				return "";
-//			}
-//			
-//		}
-//		return "/"+ARTICAL_CONTENT_SUBPATH+"/"+file.getName();
-//	}
-	
 	public static boolean deleteFile(String path){
         File file = new File(path);
         if (file.exists() == false) {
             return false;
         }
         return file.delete();
+	}
+
+	public static void createFile(String targetLocalPath) throws IOException {
+		// TODO Auto-generated method stub
+		File file = new File(targetLocalPath);
+		if(!file.getParentFile().exists()){
+			file.getParentFile().mkdirs();
+		}
+		file.createNewFile();
+	}
+
+	public static File createUniuqeFile(String parentFileName, String suffix) throws IOException {
+		// TODO Auto-generated method stub
+		File pfile = new File(parentFileName);
+		if(!pfile.exists()){
+			pfile.mkdirs();
+		}
+		File file = new File(pfile,new Date().getTime()+suffix);
+		while(file.exists()){
+			file = new File(pfile,new Date().getTime()+suffix);
+		}
+		createFile(file.getPath());
+		return file;
 	}
 
 }

@@ -29,8 +29,9 @@ public class CommentService {
 	@POST
 	@Path("get")
 	@Produces(MediaType.APPLICATION_JSON)
-	public ArrayList<Comment> getComments(@FormParam("articalHref") String articalHref){
-		return CommentApi.getComments(articalHref);
+	public ArrayList<Comment> getComments(@FormParam("articalHref") String articalHref,@FormParam("commentPage")String commentPage){
+		int pageNo = Integer.parseInt(commentPage);
+		return CommentApi.getComments(pageNo,articalHref);
 	}
 	
 	@POST

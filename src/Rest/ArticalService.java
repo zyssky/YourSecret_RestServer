@@ -2,6 +2,7 @@ package Rest;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -42,6 +43,8 @@ import Model.ArticalResponse;
 import Util.FileManager;
 import Util.UrlContentDecoder;
 import antlr.collections.List;
+import net.coobird.thumbnailator.Thumbnailator;
+import net.coobird.thumbnailator.Thumbnails;
 
 @Path("/artical")
 public class ArticalService {
@@ -103,21 +106,12 @@ public class ArticalService {
 		
 		int no = Integer.parseInt(pageNo);
 		
-//		Map<String, ArrayList<Artical>> map = new HashMap<String, ArrayList<Artical>>();
 		ArrayList<Artical> list = null;
 		if(!articalType.equals(ARTICAL_CATOGORY_OUTSIDE))
 			list = ArticalApi.getNearArticals(no,map.get(articalType),x1,y1,x2,y2);
 		else {
 			list = ArticalApi.getOutSideArticals(no, map.get(articalType), x1, y1, x2, y2);
 		}
-//		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM月dd日");
-//		for (Artical artical : list) {
-//			String date = dateFormat.format(artical.getDate());
-//			if(!map.containsKey(date)){
-//				map.put(date, new ArrayList<Artical>());
-//			}
-//			map.get(date).add(artical);
-//		}
 		
 		return list;
 	}
@@ -237,8 +231,25 @@ public class ArticalService {
 				articalHref = toRemote+articalHref.replace(File.separator, "/");
 			}
 			
+			//generate thumbnail
+			String sourceLoaclPath = urlMap.get(artical.getImageUri()).replace(toRemote, toLocal);
+			String targetLocalPath = sourceLoaclPath.replace("/image/", File.separator+"firstImage"+File.separator);
+			String targetRemotePath = urlMap.get(artical.getImageUri()).replace("image", "firstImage");
+			try {
+				FileManager.createFile(targetLocalPath);
+				Thumbnails.of(sourceLoaclPath)
+				.size(200, 200)
+				.toFile(targetLocalPath);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
+			
+			
 			//update the artical's imageUri and set the articalHref
-			artical.setImageUri(urlMap.get(artical.getImageUri()));
+			artical.setImageUri(targetRemotePath);
 			artical.setArticalHref(articalHref);
 			
 			//write to database

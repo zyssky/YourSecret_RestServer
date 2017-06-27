@@ -4,18 +4,25 @@ import java.util.ArrayList;
 import java.util.*;
 
 import org.hibernate.Session;
+import org.hibernate.query.Query;
 
 import Model.Comment;
 
 public class CommentApi {
 	
-	public static ArrayList<Comment> getComments(String articalHref) {
+	public static int pageSize = 2;
+	
+	public static ArrayList<Comment> getComments(int pageNo,String articalHref) {
 		Session session = HibernateUtil.getCurrentSession();
 		session.getTransaction().begin();
 		ArrayList<Comment> list = new ArrayList<Comment>();
 		try {
 			String hql= "from Comment where articalHref = ? order by date desc";
-			list.addAll(session.createQuery(hql,Comment.class).setParameter(0, articalHref).getResultList());
+			Query query = session.createQuery(hql);
+			query.setParameter(0, articalHref);
+			query.setFirstResult(pageNo*pageSize);
+			query.setMaxResults(pageSize);
+			list.addAll(query.getResultList());
 			session.getTransaction().commit();
 			
 		} catch (Exception e) {
