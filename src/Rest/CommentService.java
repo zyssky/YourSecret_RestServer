@@ -30,7 +30,14 @@ public class CommentService {
 	@Path("get")
 	@Produces(MediaType.APPLICATION_JSON)
 	public ArrayList<Comment> getComments(@FormParam("articalHref") String articalHref,@FormParam("commentPage")String commentPage){
-		int pageNo = Integer.parseInt(commentPage);
+		int pageNo = 0;
+		try {
+			pageNo = Integer.parseInt(commentPage);
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+		
 		return CommentApi.getComments(pageNo,articalHref);
 	}
 	

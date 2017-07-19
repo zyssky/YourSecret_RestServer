@@ -43,7 +43,7 @@ public class UserService {
 		UserResponse response = new UserResponse();
 		response.code = 999;
 		response.message = "fail";
-		String toRemote = "http://"+request.getLocalAddr()+":"+request.getLocalPort()+request.getContextPath();
+		String toRemote = "http://"+FileManager.SERVER_ADDR+":"+request.getLocalPort()+request.getContextPath();
 		if(user!=null){
 			response.code = 200;
 			response.message = "success";
@@ -62,12 +62,12 @@ public class UserService {
 	public UserResponse register(@FormDataParam("phoneNum") String phoneNum,@FormDataParam("identifier") String identifier,
 			@FormDataParam("nickName") String nickName){
 		
-		String toRemote = "http://"+request.getLocalAddr()+":"+request.getLocalPort()+request.getContextPath();
+		String toRemote = "http://"+FileManager.SERVER_ADDR+":"+request.getLocalPort()+request.getContextPath();
 //		String toLocal = context.getRealPath("");
 		
 		System.out.println(identifier);
 		
-		String defaulticonPath = toRemote+"/userIcon/default.jpg";
+		String defaulticonPath = toRemote+"/userIcon/default.png";
 		
 		UserResponse response = new UserResponse();
 		response.code = 999;
@@ -110,7 +110,7 @@ public class UserService {
 	public UserResponse modify(@FormDataParam("token") String token,
 			@FormDataParam("nickName") String nickName,@FormDataParam("image") InputStream imageData){
 		
-		String toRemote = "http://"+request.getLocalAddr()+":"+request.getLocalPort()+request.getContextPath();
+		String toRemote = "http://"+FileManager.SERVER_ADDR+":"+request.getLocalPort()+request.getContextPath();
 		String toLocal = context.getRealPath("");
 		
 		UserResponse response = new UserResponse();
@@ -126,7 +126,7 @@ public class UserService {
 				
 				File file;
 				try {
-					file = FileManager.createUniuqeFile(toLocal+File.separator+FileManager.USER_ICON_SUBPATH, FileManager.JPG);
+					file = FileManager.createUniuqeFile(toLocal+File.separator+FileManager.USER_ICON_SUBPATH, FileManager.PNG);
 					Thumbnails.of(imageData).size(200, 200).toFile(file);
 					user.setUserIconPath(toRemote+"/"+FileManager.USER_ICON_SUBPATH+"/"+file.getName());
 				} catch (IOException e) {

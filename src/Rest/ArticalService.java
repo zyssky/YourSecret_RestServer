@@ -65,7 +65,7 @@ public class ArticalService {
     public static String ARTICAL_CATOGORY_GOOD= "附近简书";
     public static String ARTICAL_CATOGORY_PUSH = "附近推荐";
     public static String ARTICAL_CATOGORY_OUTSIDE = "外面的世界";
-    public static double distance = 0.01;
+    public static double distance = 0.02;
     
 	public static HashMap<String, String> map;
     
@@ -133,8 +133,24 @@ public class ArticalService {
 		return ArticalApi.getNearArticals(no, x1, y1, x2, y2);
 	}
 	
+	@POST
+	@Path("push")
+	@Produces(MediaType.APPLICATION_JSON)
+	public ArrayList<Artical> getPushArticals(@FormParam("latitude") String latitude,
+			@FormParam("longitude") String longitude){
+		double x = Double.parseDouble(latitude);
+		double y = Double.parseDouble(longitude);
+		double x1 = x-distance;
+		double y1 = y+distance;
+		double x2 = x+distance;
+		double y2 = y-distance;
+		
+		return ArticalApi.getPushArticals(x1, y1, x2, y2);
+	}
+	
 	
 	@POST
+	@Path("user")
 	@Produces(MediaType.APPLICATION_JSON)
 	public ArrayList<Artical> getUserArticals(@FormParam("token") String token){
 		return ArticalApi.getUserArticals(token);
@@ -146,7 +162,7 @@ public class ArticalService {
 	public String deleteArtical(@FormParam("token") String token,@FormParam("articalHref") String articalHref){
 		boolean status = ArticalApi.deleteArtical(token,articalHref);
 		if(status){
-			String toRemote = "http://"+request.getLocalAddr()+":"+request.getLocalPort()+request.getContextPath();
+			String toRemote = "http://"+FileManager.SERVER_ADDR+":"+request.getLocalPort()+request.getContextPath();
 			String toLocal = context.getRealPath("");
 			
 			String path = articalHref.replace(toRemote, toLocal);
@@ -161,13 +177,14 @@ public class ArticalService {
 		}
 		return "fail";
 	}
+
 	
 	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	public ArticalResponse putArtical(FormDataMultiPart multiPart){
 
-		String toRemote = "http://"+request.getLocalAddr()+":"+request.getLocalPort()+request.getContextPath();
+		String toRemote = "http://"+FileManager.SERVER_ADDR+":"+request.getLocalPort()+request.getContextPath();
 		String toLocal = context.getRealPath("");
 
 		String articalHref = null;

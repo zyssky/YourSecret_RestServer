@@ -139,6 +139,6 @@ public class Artical {
 	
 	private double longtitude;
 	
-	private int commentNum = 0;
+	private int commentNum;
  
 }

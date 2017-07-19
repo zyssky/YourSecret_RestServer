@@ -14,6 +14,7 @@ public class FileManager {
 	public static String JPG = ".jpg";
 	public static String HTML = ".html";
 	public static String PNG = ".png";
+	public static String SERVER_ADDR = "139.159.220.78";
 	
 	public static String saveInputStream(String parentPath,String suffix,InputStream inputStream) {
 		File parentFile = new File(parentPath);

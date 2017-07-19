@@ -10,7 +10,7 @@ import Model.Comment;
 
 public class CommentApi {
 	
-	public static int pageSize = 2;
+	public static int pageSize = 10;
 	
 	public static ArrayList<Comment> getComments(int pageNo,String articalHref) {
 		Session session = HibernateUtil.getCurrentSession();
@@ -39,6 +39,7 @@ public class CommentApi {
 			try {
 				session.save(comment);
 				session.getTransaction().commit();
+				ArticalApi.increaseCommentNum(comment.getArticalHref());
 				return true;
 			} catch (Exception e) {
 				// TODO: handle exception
